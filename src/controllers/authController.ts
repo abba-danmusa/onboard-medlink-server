@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import User from '../models/user';
+import jwt from 'jsonwebtoken';
 
 export const signup = async (req: Request, res: Response) => {
   // extract signup payload
@@ -121,7 +122,19 @@ export const signin = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Invalid credentials.' });
     }
     const { password: _omit, ...safe } = user.toObject();
-    return res.json({ message: 'Signin successful.', user: safe });
+    
+    // Generate JWT token
+    const token = jwt.sign(
+      { _id: user._id },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '7d' }
+    );
+
+    return res.json({
+      message: 'Signin successful.',
+      user: safe,
+      token
+    });
   } catch (err: any) {
     return res.status(500).json({ message: 'Server error', error: err.message });
   }
