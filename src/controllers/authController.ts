@@ -2,11 +2,12 @@ import { Request, Response } from 'express';
 import User from '../models/user';
 
 export const signup = async (req: Request, res: Response) => {
-  const { 
-    firstName, 
-    lastName, 
-    email, 
-    password, 
+  // extract signup payload
+  const {
+    firstName,
+    lastName,
+    email,
+    password,
     phone,
     country,
     city,
@@ -14,13 +15,14 @@ export const signup = async (req: Request, res: Response) => {
     yearsOfExperience,
     licenseNumber,
     licenseCountry,
-    licenseFileUrl,
-    profileImageUrl,
     bio,
     languages,
+    profileImageUrl,
+    // include user's selected locale so backend can store/display localized content
+    locale,
     documents = [],
-    availability,
-    approved = false
+    availability = [{ day: 'mon', from: '09:00', to: '17:00' }],
+    approved = false,
   } = req.body as {
     firstName?: string;
     lastName?: string;
@@ -33,35 +35,48 @@ export const signup = async (req: Request, res: Response) => {
     yearsOfExperience?: number;
     licenseNumber?: string;
     licenseCountry?: string;
-    licenseFileUrl?: string;
-    profileImageUrl?: string;
     bio?: string;
     languages?: string[];
+    profileImageUrl?: string;
+    locale?: string;
     documents?: string[];
-    availability?: Array<{day: string, from: string, to: string}>;
+    availability?: Array<{ day: string; from: string; to: string }>;
     approved?: boolean;
   };
-  
-  // Required field validation
-  if (!firstName || !lastName || !email || !password || !phone || !country || 
-      !city || !specialization || !yearsOfExperience || !licenseNumber || 
-      !licenseCountry || !licenseFileUrl || !profileImageUrl || !bio || 
-      !languages || !availability) {
-    return res.status(400).json({ 
-      message: 'All required fields must be provided: firstName, lastName, email, password, phone, country, city, specialization, yearsOfExperience, licenseNumber, licenseCountry, licenseFileUrl, profileImageUrl, bio, languages, availability' 
+
+  // Required field validation (license/profile file URLs are optional)
+  if (
+    !firstName ||
+    !lastName ||
+    !email ||
+    !password ||
+    !phone ||
+    !country ||
+    !city ||
+    !specialization ||
+    yearsOfExperience === undefined ||
+    !licenseNumber ||
+    !licenseCountry ||
+    !bio ||
+    !languages ||
+    !availability
+  ) {
+    return res.status(400).json({
+      message:
+        'Missing required fields: firstName, lastName, email, password, phone, country, city, specialization, yearsOfExperience, licenseNumber, licenseCountry, bio, languages, availability',
     });
   }
-  
+
   try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(409).json({ message: 'User already exists.' });
+    const existing = await User.findOne({ email });
+    if (existing) {
+      return res.status(409).json({ message: 'User with this email already exists' });
     }
-    
-    const user = new User({ 
-      firstName, 
-      lastName, 
-      email, 
+
+    const user = new User({
+      firstName,
+      lastName,
+      email,
       password,
       phone,
       country,
@@ -70,20 +85,24 @@ export const signup = async (req: Request, res: Response) => {
       yearsOfExperience,
       licenseNumber,
       licenseCountry,
-      licenseFileUrl,
       profileImageUrl,
+      locale,
       bio,
       languages,
       documents,
       availability,
-      approved
+      approved,
     });
-    
+
     await user.save();
-    const { password: _omit, ...safe } = user.toObject();
-    return res.status(201).json({ message: 'User registered successfully.', user: safe });
-  } catch (err: any) {
-    return res.status(500).json({ message: 'Server error', error: err.message });
+
+    const safeUser = user.toObject();
+    (safeUser as any).password = undefined;
+
+    return res.status(201).json({ user: safeUser });
+  } catch (err) {
+    console.error('Signup error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 };
 
