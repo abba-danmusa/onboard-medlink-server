@@ -73,7 +73,7 @@ export const getDashboard = async (req: Request, res: Response) => {
 
 export const editUser = async (req: Request, res: Response) => {
   try {
-    const { userId } = req.params;
+    const userId = (req as any).user._id;
 
     // Verify userId is valid MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(userId)) {

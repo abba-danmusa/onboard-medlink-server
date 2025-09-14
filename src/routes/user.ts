@@ -6,6 +6,6 @@ const router = Router();
 
 // Protected routes - require authentication
 router.get('/dashboard', requireAuth, getDashboard);
-router.put('/edit/:userId', requireAuth, editUser);
+router.put('/edit', requireAuth, editUser);
 
 export default router;
