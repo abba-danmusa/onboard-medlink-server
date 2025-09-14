@@ -80,12 +80,6 @@ export const editUser = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Invalid user ID format' });
     }
 
-    // Ensure user can only edit their own data
-    const authUserId = (req as any).user._id.toString();
-    if (authUserId !== userId) {
-      return res.status(403).json({ message: 'Not authorized to edit this user' });
-    }
-
     // Fields that can be updated
     const allowedUpdates = [
       'firstName',
