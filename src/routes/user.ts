@@ -1,10 +1,11 @@
 import { Router } from 'express';
-import { getDashboard } from '../controllers/userController';
+import { getDashboard, editUser } from '../controllers/userController';
 import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
-// Protected route - requires authentication
+// Protected routes - require authentication
 router.get('/dashboard', requireAuth, getDashboard);
+router.put('/edit/:userId', requireAuth, editUser);
 
 export default router;
