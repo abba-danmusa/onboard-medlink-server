@@ -7,11 +7,14 @@ export interface IAvailability {
   to: string;
 }
 
+export type UserRole = 'doctor' | 'nurse';
+
 export interface IUser {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
+  role: UserRole;
   phone?: string;
   country?: string;
   city?: string;
@@ -47,6 +50,7 @@ const userSchema = new mongoose.Schema<IUserDocument>(
     lastName: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true },
+    role: { type: String, required: true, enum: ['doctor', 'nurse'] },
     phone: { type: String, trim: true },
     country: { type: String, trim: true },
     city: { type: String, trim: true },

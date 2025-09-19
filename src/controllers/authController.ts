@@ -3,12 +3,15 @@ import User from '../models/user';
 import jwt from 'jsonwebtoken';
 
 export const signup = async (req: Request, res: Response) => {
+  console.log('User signed up:', req.body.email);
+
   // extract signup payload
   const {
     firstName,
     lastName,
     email,
     password,
+    role,
     phone,
     country,
     city,
@@ -29,6 +32,7 @@ export const signup = async (req: Request, res: Response) => {
     lastName?: string;
     email?: string;
     password?: string;
+    role?: 'doctor' | 'nurse';
     phone?: string;
     country?: string;
     city?: string;
@@ -51,6 +55,7 @@ export const signup = async (req: Request, res: Response) => {
     !lastName ||
     !email ||
     !password ||
+    !role ||
     !phone ||
     !country ||
     !city ||
@@ -64,7 +69,7 @@ export const signup = async (req: Request, res: Response) => {
   ) {
     return res.status(400).json({
       message:
-        'Missing required fields: firstName, lastName, email, password, phone, country, city, specialization, yearsOfExperience, licenseNumber, licenseCountry, bio, languages, availability',
+        'Missing required fields: firstName, lastName, email, password, role, phone, country, city, specialization, yearsOfExperience, licenseNumber, licenseCountry, bio, languages, availability',
     });
   }
 
@@ -79,6 +84,7 @@ export const signup = async (req: Request, res: Response) => {
       lastName,
       email,
       password,
+      role,
       phone,
       country,
       city,

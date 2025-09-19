@@ -13,20 +13,37 @@ mongoose
   .then(() => console.log('Connected to MongoDB'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
-// CORS configuration: set CORS_ORIGIN in .env to restrict, default '*' for development
-// Basic CORS configuration - allow all origins in development
+// CORS configuration: set CORS_ORIGIN in .env to restrict in production
+// Default to allowing all origins during development for convenience.
+const allowedOrigin = process.env.CORS_ORIGIN || '*';
 const corsOptions: cors.CorsOptions = {
-  origin: true, // Allow all origins in development
+  origin: allowedOrigin === '*' ? true : (origin, callback) => {
+    // allow requests with no origin (like mobile apps, curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigin === '*' || origin === allowedOrigin) {
+      return callback(null, true);
+    }
+    console.warn(`Blocked CORS request from origin: ${origin}`);
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
 };
 
 // Apply CORS middleware
 app.use(cors(corsOptions));
 
-// Handle OPTIONS requests
-app.options('*', cors(corsOptions));
+// Explicit preflight handler to ensure proper Access-Control headers are always returned.
+app.options('*', (req, res) => {
+  const origin = req.header('Origin') || '*';
+  console.log(`Preflight request from origin: ${origin} to ${req.originalUrl}`);
+  res.header('Access-Control-Allow-Origin', allowedOrigin === '*' ? '*' : origin);
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  return res.sendStatus(204);
+});
 app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);

@@ -3,6 +3,8 @@ import User from '../models/user';
 import mongoose from 'mongoose';
 
 // Type for editable user fields
+import { UserRole } from '../models/user';
+
 interface EditableUserFields {
   firstName?: string;
   lastName?: string;
@@ -23,6 +25,7 @@ interface EditableUserFields {
     to: string;
   }>;
   locale?: string;
+  role?: UserRole;
 }
 
 interface AvailabilitySlot {
@@ -63,6 +66,7 @@ export const getDashboard = async (req: Request, res: Response) => {
         availability: user.availability,
         approved: user.approved,
         locale: user.locale,
+        role: user.role,
       }
     });
   } catch (err) {
@@ -96,7 +100,8 @@ export const editUser = async (req: Request, res: Response) => {
       'languages',
       'documents',
       'availability',
-      'locale'
+      'locale',
+      'role'
     ];
 
     // Filter out any fields that aren't in allowedUpdates
